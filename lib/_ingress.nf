@@ -12,7 +12,6 @@ include { xam_ingress } from './ingress.nf'
 // as you can imagine i am not happy about this
 process cram_to_bam {
     cpus 2
-    memory 4.GB
     input:
         tuple path(cram), path(crai), val(meta)
         tuple path(ref), path(ref_idx)
@@ -57,7 +56,6 @@ process minimap2_alignment {
 process check_for_alignment {
     label "wf_common"
     cpus 2
-    memory 4.GB
     input:
         tuple path(reference), path(ref_idx)
         tuple val(meta), path(xam), path(xam_idx)
