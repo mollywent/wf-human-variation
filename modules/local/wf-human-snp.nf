@@ -1,8 +1,8 @@
 import groovy.json.JsonBuilder
 
-def longphase_memory = [8.GB, 32.GB, 56.GB]
-def whatshap_memory = [4.GB, 8.GB, 12.GB]
-def haptag_memory = [4.GB, 8.GB, 12.GB]
+def longphase_memory = [2, 6, 8]
+def whatshap_memory = [1, 2, 4]
+def haptag_memory = [1, 2, 4]
 
 // As of Clair3 v1.0.6, set `--min_snp_af` and `--min_indel_af` to 0 with `--vcf_fn`.
 def snp_min_af = params.vcf_fn ? "--snp_min_af 0.0": "--snp_min_af ${params.snp_min_af}"
@@ -14,7 +14,6 @@ process make_chunks {
     // list of contigs and chunks.
     label "wf_human_snp"
     cpus 1
-    memory 4.GB
     input:
         tuple path(xam), path(xam_idx), val(xam_meta)
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
@@ -75,8 +74,7 @@ process make_chunks {
 process pileup_variants {
     // Calls variants per region ("chunk") using pileup network.
     label "wf_human_snp"
-    cpus 1
-    memory { 4.GB * task.attempt }
+    cpus { 1 * task.attempt}
     errorStrategy 'retry'
     maxRetries 1
     input:
@@ -128,8 +126,7 @@ process aggregate_pileup_variants {
     // from pileup network. Determines quality filter for selecting variants
     // to use for phasing.
     label "wf_human_snp"
-    cpus 2
-    memory { 4.GB * task.attempt }
+    cpus { 2 * task.attempt }
     maxRetries 2
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
 
@@ -168,7 +165,6 @@ process select_het_snps {
     // Filters a VCF by contig, selecting only het SNPs.
     label "wf_human_snp"
     cpus 2
-    memory 4.GB
     input:
         each contig
         tuple path("pileup.vcf.gz"), path("pileup.vcf.gz.tbi")
@@ -195,8 +191,7 @@ process phase_contig {
     //   the original BAM and BAI as phased_bam for compatability,
     //   but adds the VCF as it is now tagged with phasing information
     //   used later in the full-alignment model
-    cpus 4
-    memory { longphase_memory[task.attempt - 1] }
+    cpus { longphase_memory[task.attempt - 1] }
     maxRetries 2
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
 
@@ -217,8 +212,7 @@ process phase_contig {
 
 process cat_haplotagged_contigs {
     label "wf_human_snp"
-    cpus 4
-    memory 15.GB // cat should not need this, but weirdness occasionally strikes
+    cpus 4 // cat should not need this, but weirdness occasionally strikes
     input:
         path contig_bams // intermediate input always BAM here
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
@@ -260,7 +254,6 @@ process get_qual_filter {
     // stage "full alignment" calling.
     label "wf_human_snp"
     cpus 2
-    memory 4.GB
     input:
         tuple path("pileup.vcf.gz"), path("pileup.vcf.gz.tbi")
     output:
@@ -286,7 +279,6 @@ process create_candidates {
     // Performed per chromosome; output a list of bed files one for each chunk.
     label "wf_human_snp"
     cpus 2
-    memory 4.GB
     input:
         each contig
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
@@ -322,8 +314,7 @@ process evaluate_candidates {
     // Run "full alignment" network for variants in a candidate bed file.
     // phased_bam just references the input BAM as it no longer contains phase information.
     label "wf_human_snp"
-    cpus 1
-    memory { 8.GB * task.attempt }
+    cpus { 1 * task.attempt }
     maxRetries 2
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
 
@@ -364,8 +355,7 @@ process evaluate_candidates {
 process aggregate_full_align_variants {
     // Sort and merge all "full alignment" variants
     label "wf_human_snp"
-    cpus 2
-    memory { 4.GB * task.attempt }
+    cpus { 2 * task.attempt }
     maxRetries 2
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
 
@@ -412,7 +402,6 @@ process merge_pileup_and_full_vars{
     // Merge VCFs
     label "wf_human_snp"
     cpus 2
-    memory 4.GB
     input:
         each contig
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
@@ -451,9 +440,8 @@ process merge_pileup_and_full_vars{
 process post_clair_phase_contig {
     // Phase VCF for a contig
     // CW-2383: now uses base image to allow phasing of both snps and indels
-    cpus 4
-    // Define memory from phasing tool and number of attempt
-    memory { params.use_longphase ? longphase_memory[task.attempt - 1] : whatshap_memory[task.attempt - 1] }
+   // Define memory from phasing tool and number of attempt 
+    cpus { params.use_longphase ? longphase_memory[task.attempt - 1] : whatshap_memory[task.attempt - 1] }
     maxRetries 2
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
 
@@ -503,9 +491,8 @@ process post_clair_contig_haplotag {
     // STR workflow can start while the haplotagged XAM is being catted and
     // written for the final output
 
-    cpus 4
+    cpus { haptag_memory[task.attempt - 1] }
     // Define memory from phasing tool and number of attempt
-    memory { haptag_memory[task.attempt - 1] }
     maxRetries 2
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
 
@@ -531,8 +518,7 @@ process post_clair_contig_haplotag {
 
 process aggregate_all_variants{
     label "wf_human_snp"
-    cpus 4
-    memory { 8.GB * task.attempt }
+    cpus { 4 * task.attempt }
     maxRetries 2
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
 
@@ -590,8 +576,7 @@ process aggregate_all_variants{
 
 process refine_with_sv {
     label "wf_human_snp"
-    cpus 4
-    memory { 8.GB * task.attempt - 1.GB }
+    cpus { 2 * task.attempt }
     maxRetries 1
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
 
@@ -620,7 +605,6 @@ process refine_with_sv {
 process phase_gvcf {
     label "wf_human_snp"
     cpus 2
-    memory 4.GB
     input:
         tuple path('clair3.vcf.gz'), path('clair3.vcf.gz.tbi')
         tuple path('clair3.gvcf.gz'), path('clair3.gvcf.gz.tbi')
@@ -721,8 +705,7 @@ process vcfStats {
 
 process makeReport {
     label "wf_common"
-    cpus 1
-    memory 16.GB
+    cpus 4
     input:
         file vcfstats
         path versions
