@@ -8,7 +8,6 @@ process call_str {
     label "wf_human_str"
     // Occasionally, straglr shows 150% of usage; give two cores to prevent the issue. 
     cpus 2
-    memory 4.GB
     input:
         tuple path(xam), path(xam_idx), val(xam_meta), val(sex)
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
@@ -45,7 +44,6 @@ process annotate_repeat_expansions {
     // annotate using Stranger
     label "wf_human_str"
     cpus 1
-    memory 4.GB
     input:
         tuple val(join_key), path(vcf), path(tsv)
         path(variant_catalogue_hg38)
@@ -69,7 +67,6 @@ process annotate_repeat_expansions {
 process bam_region_filter {
     // subset contig BAM to include only STR regions
     cpus 1
-    memory 4.GB
     input:
         tuple path(xam), path(xam_idx), val(xam_meta)
         path (repeat_bed)
@@ -91,7 +88,6 @@ process bam_region_filter {
 process bam_read_filter {
     // subset contig STR regions BAM to include only supporting reads from straglr
     cpus 1
-    memory 4.GB
     input:
         tuple val(chr), path(xam), path(xam_idx), val(xam_meta), path(vcf), path(straglr_tsv)
     output:
@@ -107,7 +103,6 @@ process generate_str_content {
     // extract content info from BAM and generate TSV files for plot data
     label "wf_common"
     cpus 1
-    memory 4.GB
     input:
         tuple val(chr), path(straglr_vcf), path(straglr_tsv), path(annotated_vcf), path(annotated_vcf_tbi), path(stranger_tsv), path(stranger_annotation), path(xam), path(xam_idx), val(xam_meta)
         path (repeat_bed)
@@ -127,7 +122,6 @@ process generate_str_content {
 process merge_tsv {
     // merge the contig TSVs/CSVs
     cpus 1
-    memory 4.GB
     input:
         path (plot_tsv)
         path (straglr_tsv)
@@ -148,8 +142,7 @@ process merge_tsv {
 
 process make_report {
     label "wf_common"
-    cpus 1
-    memory 16.GB
+    cpus 2
     input:
         tuple path(vcf), path(vcf_idx)
         path(straglr_tsv)
