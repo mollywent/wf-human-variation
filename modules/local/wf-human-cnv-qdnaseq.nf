@@ -3,8 +3,7 @@ import groovy.json.JsonBuilder
 // fix_vcf was unglued to avoid installing base deps in CNV container
 process callCNV {
     label "wf_cnv"
-    cpus 1
-    memory { 16.GB * task.attempt }
+    cpus {2 * task.attempt}
     maxRetries 1
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
     // publish everything except the cnv_vcf to qdna_seq directory
@@ -67,8 +66,7 @@ process getParams {
 
 process makeReport {
     label "wf_common"
-    cpus 1
-    memory 12.GB
+    cpus 2
     input:
         path(read_stats)
         tuple path(cnv_calls), val(cnv_files), path(noise_plot), path(isobar_plot)
