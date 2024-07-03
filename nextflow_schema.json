@@ -786,12 +786,10 @@
     },
     "resources": {
         "recommended": {
-            "cpus": 32,
-            "memory": "128GB"
+            "cpus": 32
         },
         "minimum": {
-            "cpus": 16,
-            "memory": "32GB"
+            "cpus": 16
         },
         "run_time": "Variable depending on whether it is targeted sequencing or whole genome sequencing, as well as coverage and the individual analyses requested. For instance, a 90X human sample run (options: `--snp --sv --mod --str --cnv --phased --sex male`) takes less than 8h with recommended resources.",
         "arm_support": false
