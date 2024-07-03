@@ -3,7 +3,6 @@
 process filterBenchmarkVcf {
     label "wf_human_sv"
     cpus 2
-    memory 4.GB
     input:
         file calls_vcf
     output:
@@ -21,7 +20,6 @@ process filterBenchmarkVcf {
 process intersectBedWithTruthset {
     label "wf_human_sv"
     cpus 1
-    memory 4.GB
     input:
         path target_bed
         path user_truthset_bed
@@ -48,7 +46,6 @@ process intersectBedWithTruthset {
 process truvari {
     label "wf_human_sv"
     cpus 1
-    memory 4.GB
     input:
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
         tuple path(calls_vcf), path(calls_vcf_tbi)
