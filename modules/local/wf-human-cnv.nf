@@ -3,7 +3,6 @@ import groovy.json.JsonBuilder
 process callCNV {
     label "spectre"
     cpus 2
-    memory 8.GB
     input:
         tuple path(vcf), path(vcf_index)
         path ("readstats/*")
@@ -57,7 +56,6 @@ process getVersions {
 process add_snp_tools_to_versions {
     label "wf_human_snp"
     cpus 1
-    memory "2 GB"
     input: path "old_versions.txt"
     output: path "versions.txt"
     script:
@@ -83,8 +81,7 @@ process getParams {
 
 process makeReport {
     label "wf_common"
-    cpus 1
-    memory 12.GB
+    cpus 2
     input:
         path "versions/*"
         path "params.json"
