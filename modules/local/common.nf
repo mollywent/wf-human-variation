@@ -2,7 +2,6 @@ import groovy.json.JsonBuilder
 
 process cram_cache {
     cpus 1
-    memory 4.GB
     input:
         path reference
     output:
@@ -18,7 +17,6 @@ process cram_cache {
 
 process index_ref_fai {
     cpus 1
-    memory 4.GB
     input:
         file reference
     output:
@@ -30,7 +28,6 @@ process index_ref_fai {
 
 process index_ref_gzi {
     cpus 1
-    memory 4.GB
     input:
         file reference
     output:
@@ -43,7 +40,6 @@ process index_ref_gzi {
 // NOTE -f required to compress symlink
 process decompress_ref {
     cpus 1
-    memory 4.GB
     input:
         file compressed_ref
     output:
@@ -57,7 +53,6 @@ process decompress_ref {
 //NOTE grep MOSDEPTH_TUPLE if changing output tuple
 process mosdepth {
     cpus 2
-    memory {4.GB * task.attempt}
     maxRetries 2
     errorStrategy = {task.exitStatus in [137,140] ? 'retry' : 'finish'}
     input:
@@ -124,7 +119,6 @@ process mosdepth {
 process readStats {
     label "wf_common"
     cpus 4
-    memory 4.GB
     input:
         tuple path(xam), path(xam_idx), val(xam_meta)
         path target_bed
@@ -169,7 +163,6 @@ process publish_artifact {
 
 process getAllChromosomesBed {
     cpus 1
-    memory 4.GB
     input:
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
     output:
@@ -183,7 +176,6 @@ process getAllChromosomesBed {
 
 process getGenome {
     cpus 1
-    memory 4.GB
     input:
         tuple path(xam), path(xam_idx), val(xam_meta)
     output:
@@ -204,7 +196,6 @@ process getGenome {
 process eval_downsampling {
     label "wf_common"
     cpus 1
-    memory 4.GB
     input:
         path mosdepth_summary
         path bed
@@ -224,7 +215,6 @@ process eval_downsampling {
 
 process downsampling {
     cpus 4
-    memory 4.GB
     input:
         tuple path(xam), path(xam_idx), val(xam_meta)
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
@@ -250,7 +240,6 @@ process downsampling {
 // Process to get the genome coverage from the mosdepth summary.
 process get_region_coverage {
     cpus 1
-    memory 4.GB
     input:
         path bed
         tuple path(regions),
@@ -281,8 +270,7 @@ process get_region_coverage {
 // Make bam QC reporting.
 process failedQCReport  {
     label "wf_common"
-    cpus 1
-    memory 12.GB
+    cpus 4
     input: 
         tuple path(xam),
             path(xam_idx),
@@ -330,8 +318,7 @@ process failedQCReport  {
 // Alignment report
 process makeAlignmentReport {
     label "wf_common"
-    cpus 1
-    memory 12.GB
+    cpus 4
     input: 
         tuple path(xam),
             path(xam_idx),
@@ -402,8 +389,7 @@ process annotate_vcf {
     // use SnpEff to generate basic functional annotations,
     // followed by SnpSift annotate to add ClinVar annotations
     label "snpeff_annotation"
-    cpus 1
-    memory 6.GB
+    cpus 2
     input:
         tuple path("input.vcf.gz"), path("input.vcf.gz.tbi"), val(contig)
         val(genome)
@@ -454,7 +440,6 @@ process annotate_vcf {
 process sift_clinvar_vcf {
     label "snpeff_annotation"
     cpus 1
-    memory 3.GB
     input:
         tuple path("input.vcf.gz"), path("input.vcf.gz.tbi")
         val(genome)
@@ -475,7 +460,6 @@ process sift_clinvar_vcf {
 
 process concat_vcfs {
     cpus 2
-    memory 3.GB
     input:
         path (vcfs_artifacts, stageAs: "vcfs/*")
         val(prefix)
@@ -491,8 +475,7 @@ process concat_vcfs {
 
 process haploblocks {
     // Extract phased blocks from a VCF file
-    cpus 1
-    memory 8.GB
+    cpus 2
     input:
         tuple path(phased_vcf), path(phased_tbi)
         val output_label
@@ -508,7 +491,6 @@ process haploblocks {
 process bed_filter {
     // filter a BED/VCF/GFF using a BED file
     cpus 1
-    memory 4.GB
     input:
         tuple path(input, stageAs: 'input.gz'), path(input_tbi, stageAs: 'input.gz.tbi')
         path(bed)
@@ -529,7 +511,6 @@ process sanitise_bed {
     // 1) check and fix whitespace
     // 2) sort by chromosome/position
     cpus 1
-    memory 4.GB
     input:
         path(bed)
         tuple path(ref), path(ref_idx), path(ref_cache), env(REF_PATH)
@@ -551,7 +532,6 @@ process sanitise_bed {
 process combine_metrics_json {
     label "wf_common"
     cpus 1
-    memory 4.GB
     input:
         path jsons
         path "flagstat.tsv"
@@ -635,7 +615,6 @@ process haplocheck {
     // Estimate contamination level from the mitogenome
     // using haplocheck.
     cpus 2
-    memory 8.GB
     errorStrategy 'ignore'
     input:
         tuple path(xam), path(xam_idx), val(xam_meta)
