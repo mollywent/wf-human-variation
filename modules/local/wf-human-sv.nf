@@ -6,7 +6,6 @@ import groovy.json.JsonBuilder
 process sniffles2 {
     label "wf_human_sv"
     cpus params.threads
-    memory 6.GB
     input:
         tuple path(xam), path(xam_idx), val(xam_meta)
         file tr_bed
@@ -57,7 +56,6 @@ process sniffles2 {
 
 process filterCalls {
     cpus { params.threads < 2 ? 2 : params.threads }
-    memory 4.GB
     input:
         file vcf
         path mosdepth_summary // MOSDEPTH_TUPLE
@@ -93,7 +91,6 @@ process filterCalls {
 process sortVCF {
     label "wf_human_sv"
     cpus 2
-    memory 4.GB
     input:
         file vcf
     output:
@@ -143,7 +140,6 @@ process getParams {
 process report {
     label "wf_common"
     cpus 1
-    memory 6.GB
     input:
         file vcf
         file eval_json
