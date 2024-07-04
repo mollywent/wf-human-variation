@@ -426,7 +426,7 @@ process annotate_vcf {
             clinvar_vcf="${CLINVAR_PATH}/clinvar_GRCh37.vcf.gz"
         fi
 
-        snpEff -Xmx!{task.memory.giga - 1}g ann -noStats -noLog $snpeff_db ${INPUT_FILENAME} > !{params.sample_name}.intermediate.snpeff_annotated.vcf
+        snpEff -Xmx15g ann -noStats -noLog $snpeff_db ${INPUT_FILENAME} > !{params.sample_name}.intermediate.snpeff_annotated.vcf
         # Add ClinVar annotations
         SnpSift annotate $clinvar_vcf !{params.sample_name}.intermediate.snpeff_annotated.vcf | bgzip > !{params.sample_name}.wf_${OUTPUT_LABEL}.vcf.gz
         tabix !{params.sample_name}.wf_${OUTPUT_LABEL}.vcf.gz
